@@ -2,7 +2,6 @@
 	ini_set('display_errors', 1);
 	ini_set('display_startup_errors', 1);
 	error_reporting(E_ALL);
-	
 	include('common_function.php');
 	
 	if(is_ajax()) {
@@ -25,10 +24,9 @@
 				case "cancel_ng" 								: cancel_ng(); break;
 				case "get_email_recipients_by_category" 		: get_email_recipients_by_category(); break; 
 				case "get_supplier_by_pkid" 					: get_supplier_by_pkid(); break; 
-				case "view_ng_attachments" 						: view_ng_attachments(); break; 
+				case "view_ng_attachments" 				: view_ng_attachments(); break; 
 
 				case "get_supplier_ng_email_address" 			: get_supplier_ng_email_address(); break; 
-
 			}
 		}
 	}
@@ -36,6 +34,37 @@
 		return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
 	}
 	
+	function get_supplier_ng_email_address() {
+		require_once('../class/oop_tqts.php');
+		$supplier 		= $_POST['supplier'];
+		$field_name 	= $_POST['field_name'];
+		$array_fields = array($field_name);
+		$table 	   	= 'tbl_supplier';
+		$joins 	   	= '';
+		$sql_where 	= 'WHERE supplier="'.$supplier.'" AND logdel=0';
+		$sql_order 	= '';
+		$sql_limit 	= '';
+		$html_select= '';
+		$result = TQTS::getInstance()->select_query_script($array_fields,$table,$joins,$sql_where,$sql_order,$sql_limit);
+		$result = TQTS::getInstance()->select_query($array_fields,$table,$joins,$sql_where,$sql_order,$sql_limit);
+		if($row = mysqli_fetch_array($result)) {
+			
+			// echo $row['recipients_to'];
+			$array_email_add = explode(',',$row[$field_name]);
+			$return['email_add'] = array();
+			foreach($array_email_add as $key => $value){
+				$array_data_email 				= array();
+				$array_data_email['id'] 		= $value;
+				$array_data_email['text'] 		= $value;
+				$return['email_add'][]			= $array_data_email;
+			}
+		} 
+		else {
+			$return['email_add'] = '';
+			$return['script'] = '';
+		}
+		echo json_encode($return);
+	}
 	function ng_reload_wbs_record() {
 		require_once('../class/oop_tqts.php');
 		$username	= $_POST['username'];
@@ -112,7 +141,7 @@
 	function get_material_type_list() {
 		require_once('../class/oop_tqts.php');
 		$array_fields = array('material_type');
-		$table 	   	= 'tbl_material_type';
+		$table 	   	= 'tbl_qfr_ng_material_type';
 		$joins 	   	= '';
 		$sql_where 	= 'WHERE logdel="0"';
 		$sql_order 	= '';
@@ -126,7 +155,7 @@
 		echo json_encode($return);
 	}
 	
-	function save_ng_report() { //email
+	function save_ng_report() {
 		require_once('../class/oop_tqts.php');
 		$date_time_today = date('Y-m-d H:i:s');
 		$wbs_id 		 = $_POST["wbs_id"];
@@ -137,6 +166,7 @@
 		$fkfile_path     = $file['pkid'];
 		$target_dir      = $file['path'];		
 		$msg			 = '';
+		
 		$table 		  	= 'tbl_qfr_ng';
 		$values		  	= get_fields_values($_POST,array("action","file_ng","device_name","report_approvers_new","lot_numbers","quantity","lot_pkid","username","fkfile_path","wbs_id","approvers","rbtn_new"));
 		$array_fields 	= $values["array_fields"];
@@ -157,10 +187,9 @@
 		$approvers 		 = explode(',',$approvers);
 		foreach($approvers as $approver_username) {
 			$array_values 	= array($date_time_today, $username, $pkid, $approver_username, 'PENDING', $date_time_today, $username);
-			// $insert_query	= TQTS::getInstance()->insert_query($table,$array_fields,$array_values);
+			$insert_query	= TQTS::getInstance()->insert_query($table,$array_fields,$array_values);
 			$script	.= TQTS::getInstance()->insert_query_script($table,$array_fields,$array_values);
 		}	
-		
 		if(!file_exists($target_dir.$pkid.'/')) {
 			$target_dir = $target_dir.$pkid.'/';
 			mkdir($target_dir, 0777, false);
@@ -182,7 +211,7 @@
 						$msg = 'File was successfully uploaded to the system.<br>';
 						/* Send email notification to the first approver */
 						if($i == 0) {
-							// ng_send_email_for_approval($pkid);
+							ng_send_email_for_approval($pkid);
 						}
 					} else {
 						$msg = 'There was an error on renaming the file.';
@@ -265,7 +294,7 @@
 	// 		$sql_where 	= 'WHERE pkid="'.$pkid.'" AND logdel="0"';
 	// 		$sql_order 	= '';
 	// 		$sql_limit 	= '';
-	// 		$result 	= TQTS::getInstance()->select_query($array_fields,'tbl_qfr_ng',$joins,$sql_where,$sql_order,$sql_limit);
+	// 		$result 	= TQTS::getInstance()->select_query($array_fields,$table,$joins,$sql_where,$sql_order,$sql_limit);
 	// 		if($row = mysqli_fetch_array($result)) {
 	// 			$existing_file 		= $row['file_name'];
 	// 			$existing_file_e 	= explode('.',$row['file_name']);
@@ -517,8 +546,8 @@
 			$approver_username 	= $row['approver_username'];
 			$to_recipients[]	= return_user_email_add($approver_username) == 'NONE' ? '' : return_user_email_add($approver_username);
 		}
-		$to 		= implode(',',$to_recipients);
-		$from 		= return_user_email_add($created_by) == 'NONE' ? '' : return_user_email_add($created_by);
+		$to = implode(',',$to_recipients);
+		$from 		 = return_user_email_add($created_by) == 'NONE' ? '' : return_user_email_add($created_by);
 		
 		$php_mailer = new email();
 		$php_mailer->send_email($to, $from, $from, $subject, $body,'','');
@@ -682,6 +711,7 @@
 			$sql_limit 	= '';
 			$checker_status 	= 0;
 			$result = TQTS::getInstance()->select_query($array_fields,$table_details,$joins,$sql_where,$sql_order,$sql_limit);
+			$script = TQTS::getInstance()->select_query_script($array_fields,$table_details,$joins,$sql_where,$sql_order,$sql_limit);
 			while($row = mysqli_fetch_array($result)){
 				if($row['status'] == 'PENDING') {
 					$rows_status = 'PENDING';
@@ -696,6 +726,7 @@
 				$array_values 	= array($status);
 				$sql_where		= 'WHERE pkid='.$fkng.' AND logdel=0';
 				$msg 			= TQTS::getInstance()->update_query_detailed($table_main,$array_fields,$array_values,$sql_where);
+				$script 		.= TQTS::getInstance()->update_query_detailed_script($table_main,$array_fields,$array_values,$sql_where);
 			}
 		} else {
 			$array_fields 	= array('status');
@@ -793,14 +824,14 @@
 			for($i=0; $i < count($_FILES["file_ng"]["tmp_name"]); $i++) {
 				$temp_file 	     = $_FILES["file_ng"]["tmp_name"][$i];
 				$file_name 	     = $_FILES["file_ng"]["name"][$i];
-				$target_file = $target_dir . $file_name;
+				$target_file 	 = $target_dir . $file_name;
 				if (file_exists($target_file)) {
 					$msg = "Sorry, your file already exists.";
 				} else {
 					if (move_uploaded_file($temp_file, $target_file)) {
 						/* Rename the file based on pkid of Quality Report */					
 						$ext = pathinfo($target_file, PATHINFO_EXTENSION);
-						$new_file_name  = trim(($i+1)).".".$ext;
+						$new_file_name  = ($i+1).".".$ext;
 						if(rename ($target_file, $target_dir.'/'.$new_file_name)){		
 							$msg = 'File was successfully uploaded to the system.<br>';
 						} else {
@@ -815,7 +846,7 @@
 			/* Update the status as WAITING DISPOSITION */
 			$table_details	= 'tbl_qfr_ng';
 			$array_fields 	= array('fkfile_path','file_name','ng_report_no','fail_mode','status', 'supplier', 'lastupdate','username');
-			$array_values 	= array($fkfile_path, (implode(' | ', $_FILES["file_ng"]["name"])), $ng_report_no, $return['fail_mode'],'WAITING DISPOSITION', $_POST['supplier'], $date_time_today,$username);
+			$array_values 	= array($fkfile_path, (implode(' | ', $_FILES["file_ng"]["name"])), $ng_report_no, 'fail_mode','WAITING DISPOSITION', $_POST['supplier'], $date_time_today,$username);
 			$sql_where		= 'WHERE pkid='.$fkng.' AND logdel=0';
 			$msg 			.= TQTS::getInstance()->update_query_detailed($table_details,$array_fields,$array_values,$sql_where);
 			
@@ -915,8 +946,8 @@
 			$php_mailer = new email();
 			// $php_mailer->send_email($to, $from, $cc, $subject, $body,$attachment,$attachment_name);
 			$php_mailer->send_email_with_attachment($to, $from, $cc, $subject, $body, $attachment_name, $attachment);
-
-			//For follow-up email - this portion is copied from YF TQTS
+			
+			//For follow-up email
 			$subject 	 = 'Follow-up: '.$ng_report_no.' '.$part_name.' '.$_POST['fail_mode'];
 			$body 		 = 'Good day! <br>';
 			$body 		.= $_POST['message'].'<br>';
@@ -930,7 +961,7 @@
 			//novs
 			require_once('common_function.php');
 			$auto_mailer2_result = send_with_auto_mailer2(
-				'db_tqts_ts',
+				'db_tqts_yf',
 				'tbl_qfr_ng', 
 				$fkng, 
 				'TQTS', 
@@ -1052,11 +1083,8 @@
 		$sql_limit 	= 'LIMIT 0,1';
 		$result 	= TQTS::getInstance()->select_query($array_fields,$table,$joins,$sql_where,$sql_order,$sql_limit);
 		$script 	= TQTS::getInstance()->select_query_script($array_fields,$table,$joins,$sql_where,$sql_order,$sql_limit);
-		if($row = mysqli_fetch_assoc($result)){
+		while($row = mysqli_fetch_assoc($result)){
 			$return['data'] = $row;
-		}else{
-			$return['data'] = 0;
-
 		}
 		$return['script'] = $script;
 		echo json_encode($return);
@@ -1095,168 +1123,10 @@
         $disposition_status     = $_POST['disposition_status'];
         $username               = $_POST['username'];
         $msg               		= '';
+        $script               	= '';
         $disposition_file_name = array();
         /* Upload the disposition */
         if($disposition_status == 'WITH TREATMENT') {
-			// echo 'WITH TREATMENT';
-			
-			if(isset($_FILES['treatment_file']["name"])) {
-			/* nmodify MIGZ 10262023 : 1 data will saved, dont need to use the for loop
-				for($i=0; $i<count($_FILES['treatment_file']['name']); $i++) {
-					$temp_file 	     = $_FILES["treatment_file"]["tmp_name"];
-					$file_name 	     = $_FILES["treatment_file"]["name"];
-					$file  		     = return_file_path_by_div_mod('ng_disposition');
-					$fkfile_path     = $file['pkid'];
-					$target_dir      = $file['path'].$fkng."_1/";
-					if(!file_exists($target_dir)){
-						mkdir($target_dir.'/', 0777);
-					}
-					$target_file     		 = $target_dir . $file_name;
-						$disposition_file_name[] = $file_name;
-					if (file_exists($target_file)) {
-						$msg = "Sorry, your file already exists.";
-					} else {
-						if (move_uploaded_file($temp_file, $target_file)) {
-							$msg .= '<br>File was successfully uploaded to the system ->'.$file_name;				
-						} else {
-							$msg .= "Sorry, there was an error uploading your file.";
-						}
-					}
-				}
-				
-			*/
-				$temp_file 	     = $_FILES["treatment_file"]["tmp_name"];
-				$file_name 	     = $_FILES["treatment_file"]["name"];
-				$file  		     = return_file_path_by_div_mod('ng_disposition');
-				$fkfile_path     = $file['pkid'];
-				$target_dir      = $file['path'].$fkng."_1/";
-				if(!file_exists($target_dir)){
-					mkdir($target_dir.'/', 0777);
-				}
-				$target_file     		 = $target_dir . $file_name;
-				$disposition_file_name[] = $file_name;
-				if (file_exists($target_file)) {
-					$msg = "Sorry, your file already exists.";
-				} else {
-					if (move_uploaded_file($temp_file, $target_file)) {
-						$msg .= '<br>File was successfully uploaded to the system ->'.$file_name;				
-					} else {
-						$msg .= "Sorry, there was an error uploading your file.";
-					}
-				}
-				$disposition_file_name = implode(',',$disposition_file_name);
-				$table 			= 'tbl_qfr_ng_treatment';
-				$array_fields 	= array('disposition_file_name','fkfile_path','lastupdate', 'username');
-				$array_values 	= array($disposition_file_name,$fkfile_path,$date_time_today, $username);
-				$sql_where      = 'WHERE fkng='.$fkng.' AND logdel=0';
-				$msg 		    = TQTS::getInstance()->update_query_detailed($table,$array_fields,$array_values,$sql_where);
-				
-				//novs
-				/* Stop daily email notification alert on "Follow-up" */
-				require_once('../class/oop_mailer2.php');
-				$table_mailer 			= 'tbl_auto_mailer';
-				$array_fields_mailer 	= array('logdel');
-				$array_values_mailer 	= array('1');
-				$sql_where_mailer		= 'WHERE fkid="'.$fkng.'" AND db_name="db_tqts_ts" AND tbl_name="tbl_qfr_ng" AND system_name="TQTS"';
-				$msg_mailer 			= MAILER2::getInstance()->update_query_detailed($table_mailer,$array_fields_mailer,$array_values_mailer,$sql_where_mailer);
-				$script 			   = MAILER2::getInstance()->update_query_detailed_script($table_mailer,$array_fields_mailer,$array_values_mailer,$sql_where_mailer);
-				//-/novs
-			}else{
-				echo 'Saving Failed, WITH TREATMENT';
-			}
-        } else if($disposition_status == 'WITH FINAL REPLY') {
-			if(isset($_FILES['final_reply_file'])) {
-				$final_reply_file_name = array();
-				for($i=0; $i<count($_FILES['final_reply_file']['name']); $i++) {
-					$temp_file 	     = $_FILES["final_reply_file"]["tmp_name"][$i];
-					$file_name 	     = $_FILES["final_reply_file"]["name"][$i];
-					$file  		     = return_file_path_by_div_mod('ng_disposition');
-					$fkfile_path     = $file['pkid'];
-					$target_dir      = $file['path'];
-					$target_dir      = $file['path'].$fkng."_2/";
-					if(!file_exists($target_dir)){
-						mkdir($target_dir.'/', 0777);
-					}
-					$target_file     		 = $target_dir . $file_name;
-					$final_reply_file_name[] = $file_name;
-					if (file_exists($target_file)) {
-						$msg = "Sorry, your file already exists.";
-					} else {
-						if (move_uploaded_file($temp_file, $target_file)) {
-							/* Rename the file based on pkid of Quality Report */					
-							$msg .= 'File was successfully uploaded to the system ->'.$file_name;							
-						} else {
-							$msg .= "Sorry, there was an error uploading your file.";
-						}
-					}
-				}
-				$final_reply_file_name = implode(',',$final_reply_file_name);
-				$table 			= 'tbl_qfr_ng_treatment';
-				$array_fields 	= array('final_reply_file_name','fkfile_path','lastupdate', 'username');
-				$array_values 	= array($final_reply_file_name,$fkfile_path,$date_time_today, $username);
-				$sql_where      = 'WHERE fkng='.$fkng.' AND logdel=0';
-				$msg 		    = TQTS::getInstance()->update_query_detailed($table,$array_fields,$array_values,$sql_where);
-
-				//novs
-				/* Stop daily email notification alert on "Follow-up" */
-				require_once('../class/oop_mailer2.php');
-				$table_mailer 			= 'tbl_auto_mailer';
-				$array_fields_mailer 	= array('logdel');
-				$array_values_mailer 	= array('1');
-				$sql_where_mailer		= 'WHERE fkid="'.$fkng.'" AND db_name="db_tqts_ts" AND tbl_name="tbl_qfr_ng" AND system_name="TQTS"';
-				$msg_mailer 			= MAILER2::getInstance()->update_query_detailed($table_mailer,$array_fields_mailer,$array_values_mailer,$sql_where_mailer);
-				$script 			   .= MAILER2::getInstance()->update_query_detailed_script($table_mailer,$array_fields_mailer,$array_values_mailer,$sql_where_mailer);
-				//-/novs
-			}
-        }
-        /* Update disposition */
-        $table 			= 'tbl_qfr_ng_treatment';
-		$array_fields 	= array('disposition', 'disposition_by', 'disposition_date','disposition_time','disposition_remarks','final_reply_status', 'final_reply_date', 'final_reply_time', 'final_reply_remarks','lastupdate', 'username');
-		$array_values 	= array($disposition,$disposition_by,$disposition_date,$disposition_time,$disposition_remarks,$final_reply_status,$final_reply_date,$final_reply_time,$final_reply_remarks,$date_time_today, $username);
-        $sql_where      = 'WHERE fkng='.$fkng.' AND logdel=0';
-		$update_query	= TQTS::getInstance()->update_query_detailed($table,$array_fields,$array_values,$sql_where);
-		$script 		= TQTS::getInstance()->update_query_detailed_script($table,$array_fields,$array_values,$sql_where);
-		
-        /* Update status */
-        if($disposition == 'OK TO USE' || $disposition == 'USE AS IS') {
-            $new_disposition_status = 'WITH TREATMENT ('.$disposition.')';
-        } else {
-            $new_disposition_status = $disposition_status;
-        }
-		$table 			= 'tbl_qfr_ng';
-		$array_fields 	= array('status','lastupdate', 'username');
-		$array_values 	= array($new_disposition_status,$date_time_today, $username);
-		$update_query 	= TQTS::getInstance()->update_query($table,$array_fields,$array_values,$fkng);
-        
-            
-        $return['target_dir']  = $target_dir;
-        $return['POST']  = $_POST;
-        $return['msg']  = $msg;
-        $return['script']  = $script;
-        echo json_encode($return);
-	}
-
-	function add_treatment_migz() {
-		require_once('../class/oop_tqts.php');
-        $date_time_today        = date('Y-m-d H:i:s');	
-        $fkng                   = $_POST['fkng'];
-        $disposition            = $_POST['disposition'];
-        $disposition_by         = $_POST['disposition_by'];
-        $disposition_date       = $_POST['disposition_date'];
-        $disposition_time       = $_POST['disposition_time'];
-        $disposition_remarks    = $_POST['disposition_remarks'];
-        $final_reply_status     = $_POST['final_reply_status'];
-        $final_reply_date       = $_POST['final_reply_date'];
-        $final_reply_time       = $_POST['final_reply_time'];
-        $final_reply_remarks    = $_POST['final_reply_remarks'];
-        $disposition_status     = $_POST['disposition_status'];
-        $username               = $_POST['username'];
-        $msg               		= '';
-        $disposition_file_name = array();
-        /* Upload the disposition */
-        if($disposition_status == 'WITH TREATMENT') {
-			echo 'WITH TREATMENT';
-			return;
 			if(isset($_FILES['treatment_file']["name"])) {
 				for($i=0; $i<count($_FILES['treatment_file']['name']); $i++) {
 					$temp_file 	     = $_FILES["treatment_file"]["tmp_name"][$i];
@@ -1292,14 +1162,12 @@
 				$table_mailer 			= 'tbl_auto_mailer';
 				$array_fields_mailer 	= array('logdel');
 				$array_values_mailer 	= array('1');
-				$sql_where_mailer		= 'WHERE fkid="'.$fkng.'" AND db_name="db_tqts_ts" AND tbl_name="tbl_qfr_ng" AND system_name="TQTS"';
+				$sql_where_mailer		= 'WHERE fkid="'.$fkng.'" AND db_name="db_tqts_yf" AND tbl_name="tbl_qfr_ng" AND system_name="TQTS"';
 				$msg_mailer 			= MAILER2::getInstance()->update_query_detailed($table_mailer,$array_fields_mailer,$array_values_mailer,$sql_where_mailer);
 				$script 			   .= MAILER2::getInstance()->update_query_detailed_script($table_mailer,$array_fields_mailer,$array_values_mailer,$sql_where_mailer);
 				//-/novs
 			}
         } else if($disposition_status == 'WITH FINAL REPLY') {
-			echo 'WITH FINAL REPLY';
-			return;
 			if(isset($_FILES['final_reply_file'])) {
 				$final_reply_file_name = array();
 				for($i=0; $i<count($_FILES['final_reply_file']['name']); $i++) {
@@ -1331,22 +1199,21 @@
 				$array_values 	= array($final_reply_file_name,$fkfile_path,$date_time_today, $username);
 				$sql_where      = 'WHERE fkng='.$fkng.' AND logdel=0';
 				$msg 		    = TQTS::getInstance()->update_query_detailed($table,$array_fields,$array_values,$sql_where);
-
+				
 				//novs
 				/* Stop daily email notification alert on "Follow-up" */
 				require_once('../class/oop_mailer2.php');
 				$table_mailer 			= 'tbl_auto_mailer';
 				$array_fields_mailer 	= array('logdel');
 				$array_values_mailer 	= array('1');
-				$sql_where_mailer		= 'WHERE fkid="'.$fkng.'" AND db_name="db_tqts_ts" AND tbl_name="tbl_qfr_ng" AND system_name="TQTS"';
+				$sql_where_mailer		= 'WHERE fkid="'.$fkng.'" AND db_name="db_tqts_yf" AND tbl_name="tbl_qfr_ng" AND system_name="TQTS"';
 				$msg_mailer 			= MAILER2::getInstance()->update_query_detailed($table_mailer,$array_fields_mailer,$array_values_mailer,$sql_where_mailer);
 				$script 			   .= MAILER2::getInstance()->update_query_detailed_script($table_mailer,$array_fields_mailer,$array_values_mailer,$sql_where_mailer);
 				//-/novs
 			}
         }
-        echo 'labas';
-		return;
-        /* Update disposition */ //disposition_file_name
+        
+        /* Update disposition */
         $table 			= 'tbl_qfr_ng_treatment';
 		$array_fields 	= array('disposition', 'disposition_by', 'disposition_date','disposition_time','disposition_remarks','final_reply_status', 'final_reply_date', 'final_reply_time', 'final_reply_remarks','lastupdate', 'username');
 		$array_values 	= array($disposition,$disposition_by,$disposition_date,$disposition_time,$disposition_remarks,$final_reply_status,$final_reply_date,$final_reply_time,$final_reply_remarks,$date_time_today, $username);
@@ -1424,7 +1291,7 @@
         require_once('../class/oop_tqts.php');
         $category_code = $_POST['qfr_category'];
 		$array_fields = array('to_recipient','cc_recipient');
-		$table 	   	= 'tbl_quality_report_category';
+		$table 	   	= 'tbl_qfr_ng_recipients';
 		$joins 	   	= '';
 		$sql_where 	= 'WHERE category_code="'.$category_code.'" AND logdel=0';
 		$sql_order 	= '';
@@ -1463,7 +1330,6 @@
 		$sql_where 	= 'WHERE pkid="'.$pkid.'" AND logdel=0';
 		$sql_order 	= '';
 		$sql_limit 	= 'LIMIT 0,1';
-		$result = TQTS::getInstance()->select_query_script($array_fields,$table,$joins,$sql_where,$sql_order,$sql_limit);
 		$result = TQTS::getInstance()->select_query($array_fields,$table,$joins,$sql_where,$sql_order,$sql_limit);
 		if($row=mysqli_fetch_array($result)) {
 			$array_supp	 		= explode(",",$row['supplier']);
@@ -1494,7 +1360,7 @@
 		if($row=mysqli_fetch_array($result)) {
 			$file_names  = explode(' | ', $row['file_name']);
 			$table_body .= '<tr>';
-			$table_body .= '	<td>NG Report Attachment/s (No e-signature)</td>';
+			$table_body .= '	<td>NG Report Attachment/s</td>';
 			$table_body .= '</tr>';
 			for($i=0; $i<count($file_names); $i++) {
 				$table_body .= '<tr>';
@@ -1538,38 +1404,5 @@
 		$return['table_body'] = $table_body;
 		echo json_encode($return);
     }
-
-	function get_supplier_ng_email_address() {
-		require_once('../class/oop_tqts.php');
-		$supplier 		= $_POST['supplier'];
-		$field_name 	= $_POST['field_name'];
-		$array_fields = array($field_name);
-		$table 	   	= 'tbl_supplier';
-		$joins 	   	= '';
-		$sql_where 	= 'WHERE supplier="'.$supplier.'" AND fksupplier_group != 0 OR category = "NGR" AND logdel=0';
-		$sql_order 	= '';
-		$sql_limit 	= '';
-		$html_select= '';
-		$result = TQTS::getInstance()->select_query_script($array_fields,$table,$joins,$sql_where,$sql_order,$sql_limit);
-		$result = TQTS::getInstance()->select_query($array_fields,$table,$joins,$sql_where,$sql_order,$sql_limit);
-		if($row = mysqli_fetch_array($result)) {
-			
-			// echo $row['recipients_to'];
-			$array_email_add = explode(',',$row[$field_name]);
-			$return['email_add'] = array();
-			foreach($array_email_add as $key => $value){
-				$array_data_email 				= array();
-				$array_data_email['id'] 		= $value;
-				$array_data_email['text'] 		= $value;
-				$return['email_add'][]			= $array_data_email;
-			}
-		} 
-		else {
-			$return['email_add'] = '';
-			$return['script'] = '';
-		}
-		echo json_encode($return);
-	}
-	
 	
 	?>

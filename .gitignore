@@ -1,2 +1,44 @@
 /uploaded_file
 .vscode
+
+# Excel / spreadsheets
+*.xls
+*.xlsx
+*.xlsm
+*.xlsb
+*.csv
+/Excel Files/
+
+# Documents
+*.pdf
+*.doc
+*.docx
+*.ppt
+*.pptx
+
+# Archives
+*.zip
+*.rar
+*.7z
+*.tar
+*.gz
+
+# Database dumps / backups
+*.sql
+*.bak
+*.backup
+
+# Large media
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.psd
+
+# Logs / temp / OS files
+*.log
+*.tmp
+~$*
+Thumbs.db
+desktop.ini
+*.lnk

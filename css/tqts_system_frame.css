@@ -7,8 +7,8 @@ body {
 }
 
 .topbar {
-	background: #2A3F54;
-	border-color: #2A3F54;
+	background: #FA6C09;
+	border-color: #FA6C09;
 	border-radius: 0px;
 }
 
@@ -25,14 +25,14 @@ body {
 }
 
 .sidebar {
-    z-index: 1000;
-    position: fixed;
-    top: 50px;
-    left: -50px;
-    width: 50px;
-    height: 100%;
-    overflow-y: auto;
-    background: #2A3F54;
+  z-index: 1000;
+  position: fixed;
+  top: 50px;
+  left: -50px;
+  width: 50px;
+  height: 100%;
+  overflow-y: auto;
+  background: #FA6C09;
 	color: #ffffff;
 	-webkit-transition: all 0.5s ease;
     -moz-transition: all 0.5s ease;

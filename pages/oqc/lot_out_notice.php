@@ -2281,7 +2281,7 @@ foreach($user_role['subsystem_code'] as $key => $subsystem_code ){
 	  <form id="frm_oqc_capa_monitoring">
 		  <!-- CORRECTIVE / PREVENTIVE ACTION -->
 		  <div class="modal-body">
-			<div class="row" style="margin-top:5px;">
+			<div class="row" style="margin-top:5px;display:none;">
 				<div class="col-sm-2">
 					<label class="fa fa-md">Oqc Lon Id: </label>
 				</div>
@@ -2289,7 +2289,7 @@ foreach($user_role['subsystem_code'] as $key => $subsystem_code ){
 					<input type="hidden" class="form-control" id="oqc_lon_id" name="oqc_lon_id">
 				</div>
 			</div>	
-			<div class="row" style="margin-top:5px;">
+			<div class="row" style="margin-top:5px;display:none;">
 				<div class="col-sm-2">
 					<label class="fa fa-md">Oqc Lon CapaMonitoring Id: </label>
 				</div>

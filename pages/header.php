@@ -32,7 +32,7 @@
 		<div class="">
 			<div class="navbar-header">
 				<a href="#" class="navbar-brand">
-					<span class="hidden-xs">TQTS TS</span>
+					<span class="hidden-xs">TQTS YF</span>
 				</a>
 
 				<p class="navbar-text">

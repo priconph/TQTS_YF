@@ -1,6 +1,6 @@
 $('#tbl_user_main').DataTable({
 	"aaSorting"	 : [],	
-	"sAjaxSource": "server_side_scripts/configuration/user_roles_main.php?fk_system=65&fk_module=113"
+	"sAjaxSource": "server_side_scripts/configuration/user_roles_main.php?fk_system=65&fk_module=153"
 	// "sAjaxSource": "server_side_scripts/configuration/user_roles_main.php?fk_system=65"
 	// "sAjaxSource": "server_side_scripts/configuration/user_roles_main.php?fk_system=20"
 });

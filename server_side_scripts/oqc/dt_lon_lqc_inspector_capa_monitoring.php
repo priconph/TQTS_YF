@@ -17,7 +17,7 @@
     
 	$aColumns = array( 
 		'id', 
-		'tbl_oqc_lon_id', 
+		'oqc_lon_id', 
 		'oqc_capa_action', 
 		'oqc_capa_action_incharge', 
 		'oqc_capa_due_date', 
@@ -31,7 +31,7 @@
 	/* used this field for searching data typed in the search box */
 
 	$array_search = array(
-		'tbl_oqc_lon_id', 
+		'oqc_lon_id', 
 		'oqc_capa_action', 
 		'oqc_capa_action_incharge', 
 		'oqc_capa_due_date', 
@@ -178,8 +178,9 @@
 		$sWhere .= " AND logdel=0";
 	} else {
 		$sWhere .= " AND logdel=0 AND created_by='".$username."'";		
-		$sWhere .= " AND tbl_oqc_lon_id = '".$_GET['oqc_lon_id']."'";		
 	}
+	$sWhere .= " AND oqc_lon_id = '".$_GET['oqc_lon_id']."'";		
+
 	
 	if($sOrder == ""){
 		$sOrder = 'ORDER BY id DESC';
@@ -260,15 +261,23 @@
 		$row[] = $status;
 		$row[] = $aRow['oqc_capa_action'];
 		$row[] = get_in_charge_by_username($aRow['oqc_capa_action_incharge']);
-		$row[] = $aRow['oqc_capa_due_date'];
-		$row[] = $aRow['oqc_capa_req_sub_date'];
-		$row[] = $aRow['oqc_capa_actual_sub_date'];
+		$row[] = getDateFormat($aRow['oqc_capa_due_date']);
+		$row[] = getDateFormat($aRow['oqc_capa_req_sub_date']);
+		$row[] = getDateFormat($aRow['oqc_capa_actual_sub_date']);
 		$row[] = $aRow['oqc_capa_remarks'];
 		
 		array_push($output['aaData'],$row);
 	}
 	echo json_encode( $output );
-
+	function getDateFormat($date) {
+		$is_date_exist = $date != "" ? 'true' : 'false';
+		if($is_date_exist == 'true'){
+			$date = date( 'd-M-y', strtotime( $date ) ) ;
+		}else{
+			$date = "N/A";
+		}
+		return $date;
+	}
 	/* Request by Ma'am Kris P. 8/14/2018 to view all created record of inspector to all supervisor */
 	function check_has_supervisor_access($username) {
 		require_once('../../class/oop_tqts.php');

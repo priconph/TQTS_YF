@@ -57,7 +57,7 @@ var handler_configuration 	= 'handler/handler_configuration.php';
 // $('#container_user_crud .panel-body,#container_user_crud .panel-heading').toggle(500);
 </script>
 
-<script type="text/javascript" src="../common_functions/common_functions.j?2"></script>
-<script type="text/javascript" src="js/configuration/supplier.js?214567"></script>
-<script type="text/javascript" src="js/configuration/approver.js?2"></script>
-<script type="text/javascript" src="js/configuration/user_roles.js?2"></script>
+<script type="text/javascript" src="../common_functions/common_functions.j?t=<?=time()?>"></script>
+<script type="text/javascript" src="js/configuration/supplier.js?t=<?=time()?>"></script>
+<script type="text/javascript" src="js/configuration/approver.js?t=<?=time()?>"></script>
+<script type="text/javascript" src="js/configuration/user_roles.js?t=<?=time()?>"></script>

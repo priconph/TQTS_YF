@@ -375,10 +375,10 @@ $is_active = ($sa_report_disposition_admin || $sa_report_manager)?"active":"";
 						<input type="text" class="form-control" id="" name="device_name" required>
 					</div>
 					<div class="col-sm-2">
-						<label class="fa fa-md">Parts Affected: </label>
+						<label class="fa fa-md">Affected Qty: </label>
 					</div>
 					<div class="col-sm-4">
-						<input type="text" class="form-control" id="" name="parts_affected_device">
+						<input type="text" class="form-control" id="" name="affected_quantity">
 					</div>
 				</div>
             </div>
@@ -453,13 +453,6 @@ $is_active = ($sa_report_disposition_admin || $sa_report_manager)?"active":"";
 				<div class="col-sm-4">
 					<input type="date" class="form-control" id="" name="shipment_date">
 				</div>
-				<div class="col-sm-2">
-					<label class="fa fa-md">Affected Qty: </label>
-				</div>
-				<div class="col-sm-4">
-					<input type="number" class="form-control" id="" name="affected_quantity">
-				</div>
-				
 			</div>
 			<div class="row">
 				<div id="container_approver_name" class="deletedField">
@@ -727,7 +720,7 @@ $is_active = ($sa_report_disposition_admin || $sa_report_manager)?"active":"";
 				</div>	
 				<div class="col-sm-4" id="">	
 					<!-- <input type="file" class="form-control" name="file_sa" id="file_sa" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"  required>	 		 -->
-					<input type="file" class="form-control" name="file_sa" id="file_sa" accept=".pdf"  required>	 		
+					<input type="file" class="form-control" name="file_sa[]" id="file_sa" accept=".pdf,.csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" multiple  required>	 		
 				</div>		
 				<div class="col-sm-2">
 					<label class="fa fa-md">Supplier: </label>

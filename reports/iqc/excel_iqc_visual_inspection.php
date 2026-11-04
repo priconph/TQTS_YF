@@ -578,7 +578,7 @@ $col = 'C'; $row = '9';   $excel->place_value($col.$row,$week_5_accepted);
 $col = 'D'; $row = '9';   $excel->place_value($col.$row,$week_5_sample);
 $col = 'E'; $row = '9';   $excel->place_value($col.$row,$week_5_defect);
 
-$filename = 'TS-Quality Performance Summary';
+$filename = 'YF-Quality Performance Summary';
 /* output excel - filename, excel version (2003,2007) */
 // $excel->output($filename,'2007');
 $excel->output($filename,'2003');
